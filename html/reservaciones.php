@@ -173,15 +173,6 @@
 
             MercadoPagoConfig::setAccessToken("TEST-2221383748999612-111815-1d20bf7cec550a1fa34354c6d415f622-386056396");
 
-
-            // //TODO: REMPLAZAR RUTAS ESTÁTICAS AL SUBIR AL HOSTING
-            // $backUrls = [
-            //     "success" => "http://localhost/wk4rent/html/pagos.php",
-            //     //TODO: CREAR PÁGINA PARA INDICAR QUE HUBO UN ERROR
-            //     "failure" => "http://localhost/wk4rent/html/reservaciones.php",
-            // ];
-
-
             // Database connection settings
             $conn = new mysqli("localhost", "root", "", "wk4rent");
 
@@ -230,8 +221,7 @@
                         //TODO: REMPLAZAR RUTAS ESTÁTICAS AL SUBIR AL HOSTING
                         $backUrls = [
                             "success" => "http://localhost/wk4rent/html/pagos.php",
-                            //TODO: CREAR PÁGINA PARA INDICAR QUE HUBO UN ERROR
-                            "failure" => "http://localhost/wk4rent/html/reservaciones.php",
+                            "failure" => "http://localhost/wk4rent/html/canceled_payment.php",
                         ];
 
                         if($car){  
@@ -325,43 +315,29 @@
                                 </div>
                             </div>
 
-                            <!-- MERCADO PAGO -->
-                            <!-- <script>
-                                const mp = new MercadoPago('TEST-2006206e-e13b-4fa2-bbfe-fb3978e53c4e', {
-                                    locale: 'es-MX'
-                                });
-
-                                mp.bricks().create("wallet", "wallet_container",{
-                                    initialization: {
-                                        preferenceId: '<?php echo $preference->id; ?>',
-                                        redirectMode: "modal",
-                                    },
-                                })
-                            </script> -->
-
                             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
                             <script>
                                 $(document).ready(function() {
                                     $('#form_mercadoPago').on('submit', function(event) {
-                                        event.preventDefault();  // Evitar el envío tradicional del formulario
+                                        event.preventDefault();  //Evita que se envíe el formulario de la forma perdeterminada
 
-                                        var formData = $(this).serialize();  // Obtener los datos del formulario
+                                        var formData = $(this).serialize();  //Obtiene los datos de form_mercadoPago
 
                                         //Deshabilitar función para no enviar más peticiones
                                         $('#btn-confirmData').prop('disabled', true);
 
                                         $.ajax({
-                                            url: 'save_info.php',  // El archivo donde se procesarán los datos
-                                            type: 'POST',          // Método de envío
-                                            data: formData,        // Datos del formulario
+                                            url: 'save_info.php',  //Archivo para guardar en la BD
+                                            type: 'POST',          //Tipo de envío
+                                            data: formData,        //Incluye los datos del formular
                                             success: function(response) {
 
                                                 // Respuesta del guardado de datos en save_info.php
                                                 console.log("Datos guardados correctamente.");
                                                 console.log(response);
                                                 
-                                                // Render del botón de mercado pago
+                                                //Render del botón de mercado pago
                                                 const mp = new MercadoPago('TEST-2006206e-e13b-4fa2-bbfe-fb3978e53c4e', {
                                                     locale: 'es-MX'
                                                 });
@@ -377,8 +353,8 @@
 
                                             },
                                             error: function() {
-                                                // Si ocurre un error en la solicitud AJAX
-                                                console.log("Hubo un error al procesar los datos.");
+                                                //Mensaje de error de AJAX
+                                                console.log("Error al crear el botón");
                                             }
                                         });
                                     });

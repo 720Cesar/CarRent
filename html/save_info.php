@@ -20,10 +20,21 @@
     $telefono_cliente = $_POST['telefono_cliente'];
     $email_cliente = $_POST['email_cliente'];
     
+    $queryPrice = "SELECT precio FROM automoviles WHERE id = '$id_auto'";
 
-    // Insertar los datos en la base de datos
-    $query = "INSERT INTO reservas (id_auto, total, nombre_cliente, telefono_cliente, email_cliente, ubicacion_entrega, fecha_inicio, fecha_fin, dias, status, id_payment) 
-            VALUES ('$id_auto', '$total', '$nombre_cliente', '$telefono_cliente', '$email_cliente', '$ubicacion_entrega', '$fecha_inicio', '$fecha_fin', '$dias', null, null)";
+    $result = $conexion->query($queryPrice);
+
+    if ($result->num_rows > 0) {
+
+        $row = $result->fetch_assoc();
+        $precioAuto = $row['precio'];
+    } else {
+        echo "No se encontraron registros";
+    }
+
+
+    $query = "INSERT INTO reservas (id_auto, precio_por_dia, total, nombre_cliente, telefono_cliente, email_cliente, ubicacion_entrega, fecha_inicio, fecha_fin, dias, status, id_payment) 
+            VALUES ('$id_auto', '$precioAuto','$total', '$nombre_cliente', '$telefono_cliente', '$email_cliente', '$ubicacion_entrega', '$fecha_inicio', '$fecha_fin', '$dias', null, null)";
 
     if ($conexion->query($query) === TRUE) {
         echo json_encode(["success" => true, "message" => "Datos guardados correctamente"]);
@@ -32,7 +43,6 @@
     }
 
   }  
-  // Cerrar la conexión
     $conexion->close();
 
 ?>
