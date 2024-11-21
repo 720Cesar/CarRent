@@ -356,10 +356,12 @@
                                             type: 'POST',          // Método de envío
                                             data: formData,        // Datos del formulario
                                             success: function(response) {
-                                                // Aquí se puede manejar la respuesta si es exitosa
+
+                                                // Respuesta del guardado de datos en save_info.php
                                                 console.log("Datos guardados correctamente.");
                                                 console.log(response);
                                                 
+                                                // Render del botón de mercado pago
                                                 const mp = new MercadoPago('TEST-2006206e-e13b-4fa2-bbfe-fb3978e53c4e', {
                                                     locale: 'es-MX'
                                                 });
@@ -369,7 +371,10 @@
                                                         preferenceId: '<?php echo $preference->id; ?>',
                                                         redirectMode: "modal",
                                                     },
-                                                })
+                                                });
+
+                                                $('#returnMessage').html('<br><p><a href="javascript:history.back()">Want to edit your information?. Click here to return!</a></p>');
+
                                             },
                                             error: function() {
                                                 // Si ocurre un error en la solicitud AJAX
@@ -379,6 +384,26 @@
                                     });
                                 });
                             </script>
+
+                            <script>
+                                $(document).ready(function() {
+                                    $('#returnMessage').click(function() {
+                                        // Hacer la solicitud AJAX para eliminar el registro
+                                        $.ajax({
+                                            url: 'delete_info.php',  // El archivo que procesará la eliminación
+                                            type: 'POST',                  // Método de envío
+                                            data: {},                       // No se envía el ID, ya que se obtiene en el PHP
+                                            success: function(response) {
+                                                // Actualizar el contenido del div con la respuesta del servidor
+                                            },
+                                            error: function() {
+                                                // En caso de error, mostrar mensaje de fallo
+                                            }
+                                        });
+                                    });
+                                });
+                            </script>
+                            
 
                             <div class="card-footer">
 
@@ -394,6 +419,8 @@
                                     <input type="hidden" name="dias" value="<?= $dias; ?>">
                                     <button type="submit" class="btn btn-success" id="btn-confirmData">Confirm info</button>
                                 </form>
+
+                                <div id="returnMessage"></div>
 
 
                                 <div id="wallet_container"> </div>
