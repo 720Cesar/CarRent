@@ -343,11 +343,13 @@
 
                             <script>
                                 $(document).ready(function() {
-                                    //TODO: CAMBIAR "FORM" por el ID del formulario
-                                    $('form').on('submit', function(event) {
+                                    $('#form_mercadoPago').on('submit', function(event) {
                                         event.preventDefault();  // Evitar el envío tradicional del formulario
 
                                         var formData = $(this).serialize();  // Obtener los datos del formulario
+
+                                        //Deshabilitar función para no enviar más peticiones
+                                        $('#btn-confirmData').prop('disabled', true);
 
                                         $.ajax({
                                             url: 'save_info.php',  // El archivo donde se procesarán los datos
@@ -380,7 +382,7 @@
 
                             <div class="card-footer">
 
-                                <form method="POST" action="save_info.php">
+                                <form method="POST" action="save_info.php" id="form_mercadoPago">
                                     <input type="hidden" name="id_auto" value="<?= $id_auto; ?>">
                                     <input type="hidden" name="total" value="<?= $total; ?>">
                                     <input type="hidden" name="nombre_cliente" value="<?= htmlspecialchars($nombre_cliente); ?>">
@@ -390,7 +392,7 @@
                                     <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($fecha_inicio); ?>">
                                     <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($fecha_fin); ?>">
                                     <input type="hidden" name="dias" value="<?= $dias; ?>">
-                                    <button type="submit" class="btn btn-success">Confirm info</button>
+                                    <button type="submit" class="btn btn-success" id="btn-confirmData">Confirm info</button>
                                 </form>
 
 
