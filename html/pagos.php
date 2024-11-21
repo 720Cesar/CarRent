@@ -91,47 +91,137 @@
             <div class="col-12">
                 <?php
 
-                if(isset($_GET['external_reference'])){
-                
-                    $externalReference = $_GET['external_reference'];
+                    $payment_id = $_GET['payment_id'];
+                    $id_auto = $_GET['external_reference'];
+                    $status = $_GET['status'];
+                    
+                    require '../vendor/autoload.php';
+
+                    use MercadoPago\MercadoPagoConfig;
+                    use MercadoPago\Client\Preference\PreferenceClient;
+                    use MercadoPago\Resources\Payment;
+                    use MercadoPago\Client\Payment\PaymentClient;
 
 
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "wk4rent";
+                    MercadoPagoConfig::setAccessToken("TEST-2221383748999612-111815-1d20bf7cec550a1fa34354c6d415f622-386056396");
 
-                    $conn = new mysqli($servername, $username, $password, $dbname);
+                    $client = new PaymentClient();
 
-                    if ($conn->connect_error) {
-                        die("<div class='alert alert-danger'>Conexión fallida: " . $conn->connect_error . "</div>");
+                    // echo $payment_id;
+                    // echo $id_auto;
+                    // echo $status;
+
+                    // Conexión a la base de datos
+                    $conexion = new mysqli("localhost", "root", "", "wk4rent");
+
+                    if ($conexion->connect_error) {
+                        die("Conexión fallida: " . $conexion->connect_error);
                     }
+                    
+                    $sql_ultimo_id = "SELECT MAX(id) AS ultimo_id FROM reservas";
 
-                    $sql = "SELECT * FROM `reservas` WHERE `external_reference` = ?;";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("s",$externalReference);
-                    $stmt->execute();
+                    $result = $conexion->query($sql_ultimo_id);
 
-                    //$stmt->bind_result($columna1, $columna2);
-
-                    $transaccion = $stmt->fetch();
-
-                    if ($transaccion) {
-                        echo "<h1>Datos de la Transacción</h1>";
-                        echo "<p>ID Auto: " . $transaccion['id_auto'] . "</p>";
-                        echo "<p>Total: " . $transaccion['total'] . "</p>";
-                        echo "<p>Cliente: " . $transaccion['nombre_cliente'] . "</p>";
-                        echo "<p>Email: " . $transaccion['email_cliente'] . "</p>";
-                        echo "<p>Ubicación: " . $transaccion['ubicacion_entrega'] . "</p>";
-                        echo "<p>Fechas: " . $transaccion['fecha_inicio'] . " a " . $transaccion['fecha_fin'] . "</p>";
+                    if ($result->num_rows > 0) {
+                        // Obtener el último ID
+                        $row = $result->fetch_assoc();
+                        $ultimo_id = $row['ultimo_id'];
                     } else {
-                        echo "<p>Error por la falta de datos.</p>";
+                        echo "No se encontraron registros.";
                     }
-            }
+
+                    $update_sql = "UPDATE reservas SET id_payment = '$payment_id' WHERE id = '$ultimo_id'";
+                    if ($conexion->query($update_sql) === TRUE) {
+                        //echo "Registro actualizado correctamente.";
+                    } else {
+                        echo "Error al actualizar: " . $conexion->error;
+                    }
+
+                    $update_sql2 = "UPDATE reservas SET status = '$status' WHERE id_payment = '$payment_id'";
+                    if ($conexion->query($update_sql2) === TRUE) {
+                        //echo "Status actualizado.";
+                    } else {
+                        echo "Error al actualizar: " . $conexion->error;
+                    }
+                    
+                    $update_sql3 = "UPDATE automoviles SET disponible = 0 WHERE id = $id_auto";
+                    if ($conexion->query($update_sql3) === TRUE) {
+                        //echo "Disponibilidad actualizado.";
+                    } else {
+                        echo "Error al actualizar: " . $conexion->error;
+                    }
+
+                    $sqlReservas = "SELECT * FROM reservas WHERE id_payment = ?";
+
+                    $stmt = $conexion->prepare($sqlReservas);
+                    $stmt->bind_param("i", $payment_id);  // El parámetro 'i' es para un entero
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+
+                    if ($result->num_rows > 0) {
+                        $row = $result->fetch_assoc();
+                    
+                        // Asignar los datos a las variables
+                        $id_auto = $row['id_auto'];
+                        $nombre_cliente = $row['nombre_cliente'];
+                        $telefono_cliente = $row['telefono_cliente'];
+                        $email_cliente = $row['email_cliente'];
+                        $ubicacion_entrega = $row['ubicacion_entrega'];
+                        $fecha_inicio = $row['fecha_inicio'];
+                        $fecha_fin = $row['fecha_fin'];
+                        $dias = $row['dias'];
+                        $total = $row['total'];
+                    } else {
+                        echo "No se encontró el registro.";
+                        exit;  // Terminar ejecución si no se encuentra el auto
+                    }
+                    
+
+                    $car_sql = "SELECT marca, modelo, precio FROM automoviles WHERE id = $id_auto";
+                    $car_result = $conexion->query($car_sql);
+                    if ($car_result->num_rows > 0) {
+                        $car = $car_result->fetch_assoc();
+                        echo "<li class='list-group-item'><strong>Car:</strong> " . htmlspecialchars($car['marca']) . " " . htmlspecialchars($car['modelo']) . "</li>";
+                        echo "<li class='list-group-item'><strong>Price per Day:</strong> $" . number_format($car['precio'], 2) . "</li>";
+                    }
+                    echo "</ul>";
+
+                    // Cerrar la conexión
+                    $stmt->close();
+                    $conexion->close();
+
+                    echo "<div class='alert alert-success'>Reservation completed successfully</div>";
+                    echo "<ul class='list-group'>";
+                    echo "<li class='list-group-item'><strong>Name:</strong> $nombre_cliente</li>";
+                    echo "<li class='list-group-item'><strong>Phone Number:</strong> $telefono_cliente</li>";
+                    echo "<li class='list-group-item'><strong>Email:</strong> $email_cliente</li>";
+                    echo "<li class='list-group-item'><strong>Delivery Location:</strong> $ubicacion_entrega</li>";
+                    echo "<li class='list-group-item'><strong>Start Date:</strong> $fecha_inicio</li>";
+                    echo "<li class='list-group-item'><strong>End Date:</strong> $fecha_fin</li>";
+                    echo "<li class='list-group-item'><strong>Days:</strong> $dias</li>";
+                    echo "<li class='list-group-item'><strong>Total Amount to Pay:</strong> $" . number_format($total, 2) . "</li>";
+                    
+
 
                 ?>
             </div>
         </div>
+
+
+        <form method="post" action="generar_pdf.php" class="mt-3">
+        <!-- Campos ocultos para pasar los datos -->
+            <input type="hidden" name="id_auto" value="<?= htmlspecialchars($id_auto); ?>">
+            <input type="hidden" name="nombre_cliente" value="<?= htmlspecialchars($nombre_cliente); ?>">
+            <input type="hidden" name="telefono_cliente" value="<?= htmlspecialchars($telefono_cliente); ?>">
+            <input type="hidden" name="email_cliente" value="<?= htmlspecialchars($email_cliente); ?>">
+            <input type="hidden" name="ubicacion_entrega" value="<?= htmlspecialchars($ubicacion_entrega); ?>">
+            <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($fecha_inicio); ?>">
+            <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($fecha_fin); ?>">
+            <input type="hidden" name="dias" value="<?= htmlspecialchars($dias); ?>">
+            <input type="hidden" name="total" value="<?= htmlspecialchars($total); ?>">
+            <button type="submit" class="btn btn-secondary">Descargar PDF</button>
+        </form>
+
     </div>
 
     <!-- JavaScript Files -->

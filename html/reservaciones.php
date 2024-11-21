@@ -174,12 +174,12 @@
             MercadoPagoConfig::setAccessToken("TEST-2221383748999612-111815-1d20bf7cec550a1fa34354c6d415f622-386056396");
 
 
-            //TODO: REMPLAZAR RUTAS ESTÁTICAS AL SUBIR AL HOSTING
-            $backUrls = [
-                "success" => "http://localhost/wk4rent/html/pagos.php",
-                //TODO: CREAR PÁGINA PARA INDICAR QUE HUBO UN ERROR
-                "failure" => "http://localhost/wk4rent/html/reservaciones.php",
-            ];
+            // //TODO: REMPLAZAR RUTAS ESTÁTICAS AL SUBIR AL HOSTING
+            // $backUrls = [
+            //     "success" => "http://localhost/wk4rent/html/pagos.php",
+            //     //TODO: CREAR PÁGINA PARA INDICAR QUE HUBO UN ERROR
+            //     "failure" => "http://localhost/wk4rent/html/reservaciones.php",
+            // ];
 
 
             // Database connection settings
@@ -225,31 +225,14 @@
                         $dias = max(1, $dias);
 
                         $total = $precio_por_dia * $dias;
-                        
-                        //Se crea una referencia externa única
-                        $externalReference = uniqid('txn_');
 
-                        $sql = "INSERT INTO reservas (
-                            id_auto, external_reference, fecha_inicio, fecha_fin, dias, precio_por_dia, total, ubicacion_entrega, nombre_cliente, telefono_cliente, email_cliente, status
-                        ) VALUES (
-                            $id_auto, '$fecha_inicio', '$externalReference','$fecha_fin', $dias, $total / $dias, $total, '$ubicacion_entrega', '$nombre_cliente', '$telefono_cliente', '$email_cliente', 'pendiente'
-                        )";
 
-                        $stmt = $conn->prepare($sql);
-                        $stmt->execute([
-                            ':id_auto' => $id_auto,
-                            ':external_reference' => $externalReference,
-                            ':fecha_inicio' => $fecha_inicio,
-                            ':fecha_fin' => $fecha_fin,
-                            ':dias' => $dias,
-                            ':total' => $total,
-                            ':ubicacion_entrega' => $ubicacion_entrega,
-                            ':nombre_cliente' => $nombre_cliente,
-                            ':telefono_cliente' => $telefono_cliente,
-                            ':email_cliente' => $email_cliente,
-
-                        ]);
-
+                        //TODO: REMPLAZAR RUTAS ESTÁTICAS AL SUBIR AL HOSTING
+                        $backUrls = [
+                            "success" => "http://localhost/wk4rent/html/pagos.php",
+                            //TODO: CREAR PÁGINA PARA INDICAR QUE HUBO UN ERROR
+                            "failure" => "http://localhost/wk4rent/html/reservaciones.php",
+                        ];
 
                         if($car){  
                             $brand = $car["marca"];
@@ -288,12 +271,11 @@
                             ],
                     
                             "statement_descriptor" => "White Knight",
-                            "external_reference" => $external_reference,
+                            "external_reference" => $id_auto,
                     
                         ]);
 
-                        header("Location: " . $preference->init_point);
-                        exit;
+                        
 
                     ?>
                         <div class="card mt-4">
@@ -344,7 +326,7 @@
                             </div>
 
                             <!-- MERCADO PAGO -->
-                            <script>
+                            <!-- <script>
                                 const mp = new MercadoPago('TEST-2006206e-e13b-4fa2-bbfe-fb3978e53c4e', {
                                     locale: 'es-MX'
                                 });
@@ -355,10 +337,50 @@
                                         redirectMode: "modal",
                                     },
                                 })
+                            </script> -->
+
+                            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+                            <script>
+                                $(document).ready(function() {
+                                    //TODO: CAMBIAR "FORM" por el ID del formulario
+                                    $('form').on('submit', function(event) {
+                                        event.preventDefault();  // Evitar el envío tradicional del formulario
+
+                                        var formData = $(this).serialize();  // Obtener los datos del formulario
+
+                                        $.ajax({
+                                            url: 'save_info.php',  // El archivo donde se procesarán los datos
+                                            type: 'POST',          // Método de envío
+                                            data: formData,        // Datos del formulario
+                                            success: function(response) {
+                                                // Aquí se puede manejar la respuesta si es exitosa
+                                                console.log("Datos guardados correctamente.");
+                                                console.log(response);
+                                                
+                                                const mp = new MercadoPago('TEST-2006206e-e13b-4fa2-bbfe-fb3978e53c4e', {
+                                                    locale: 'es-MX'
+                                                });
+
+                                                mp.bricks().create("wallet", "wallet_container",{
+                                                    initialization: {
+                                                        preferenceId: '<?php echo $preference->id; ?>',
+                                                        redirectMode: "modal",
+                                                    },
+                                                })
+                                            },
+                                            error: function() {
+                                                // Si ocurre un error en la solicitud AJAX
+                                                console.log("Hubo un error al procesar los datos.");
+                                            }
+                                        });
+                                    });
+                                });
                             </script>
 
                             <div class="card-footer">
-                                <form method="POST" action="pagos.php">
+
+                                <form method="POST" action="save_info.php">
                                     <input type="hidden" name="id_auto" value="<?= $id_auto; ?>">
                                     <input type="hidden" name="total" value="<?= $total; ?>">
                                     <input type="hidden" name="nombre_cliente" value="<?= htmlspecialchars($nombre_cliente); ?>">
@@ -368,8 +390,9 @@
                                     <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($fecha_inicio); ?>">
                                     <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($fecha_fin); ?>">
                                     <input type="hidden" name="dias" value="<?= $dias; ?>">
-                                    <button type="submit" class="btn btn-success">Pay Now with MercadoPago</button>
+                                    <button type="submit" class="btn btn-success">Confirm info</button>
                                 </form>
+
 
                                 <div id="wallet_container"> </div>
 
